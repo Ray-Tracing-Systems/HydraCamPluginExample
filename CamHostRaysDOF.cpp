@@ -156,7 +156,7 @@ void SimpleDOF::AddSamplesContribution(float* out_color4f, const float* colors4f
 }
 
 
-extern "C" IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace this function or make your own ... the example will be provided
+DLL_EXPORT IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace this function or make your own ... the example will be provided
 {
   if(a_pluginId == 0)
     return nullptr;
@@ -165,4 +165,4 @@ extern "C" IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace t
   return new SimpleDOF();
 }
 
-extern "C" void DeleteRaysEmitter(IHostRaysAPI* pObject) { delete pObject; }
+DLL_EXPORT void DeleteRaysEmitter(IHostRaysAPI* pObject) { delete pObject; }

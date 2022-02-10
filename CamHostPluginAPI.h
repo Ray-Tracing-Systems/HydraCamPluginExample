@@ -50,9 +50,15 @@ struct IHostRaysAPI
 
 };
 
+#ifdef WIN32
+  #define DLL_EXPORT extern "C" __declspec(dllexport)
+#else
+  #define DLL_EXPORT extern "C"
+#endif
+
 /** 
   \brief Create camera plugin implementation
   \param a_pluginId - plugin identifier 'cpu_plugin':  <camera id="0" ... cpu_plugin="1">
  */
-extern "C" IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId);       ///<! you replace this function or make your own ... the example will be provided
-extern "C" void          DeleteRaysEmitter(IHostRaysAPI* pObject);  ///<! don't forget to provide delete fuction because your DLL has different heap
+DLL_EXPORT IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId);       ///<! you replace this function or make your own ... the example will be provided
+DLL_EXPORT void          DeleteRaysEmitter(IHostRaysAPI* pObject);  ///<! don't forget to provide delete fuction because your DLL has different heap

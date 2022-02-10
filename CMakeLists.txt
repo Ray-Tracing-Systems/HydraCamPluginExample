@@ -14,6 +14,10 @@ find_package(OpenMP REQUIRED)
 # Создание динамической библиотеки с именем example
 add_library(hydra_cam_plugin SHARED ${SOURCE_LIB} )	
 
+if (WIN32)
+  add_definitions(-DWIN32)
+endif()
+
 # does not works ... 
 
 #if (WIN32)
