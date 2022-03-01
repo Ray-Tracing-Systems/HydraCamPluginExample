@@ -178,3 +178,52 @@ IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace this functio
 }
 
 void DeleteRaysEmitter(IHostRaysAPI* pObject) { delete pObject; }
+
+#ifdef WIN32
+
+#include <windows.h>
+
+std::string ws2s(const std::wstring& s)
+{
+  int len;
+  int slength = (int)s.length() + 1;
+  len = WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, 0, 0, 0, 0);
+  char* buf = new char[len];
+  WideCharToMultiByte(CP_ACP, 0, s.c_str(), slength, buf, len, 0, 0);
+  std::string r(buf);
+  delete[] buf;
+  return r;
+}
+
+std::wstring s2ws(const std::string& s)
+{
+  int len;
+  int slength = (int)s.length() + 1;
+  len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
+  wchar_t* buf = new wchar_t[len];
+  MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
+  std::wstring r(buf);
+  delete[] buf;
+  return r;
+}
+#else
+
+#include <codecvt>
+
+std::wstring s2ws(const std::string& str)
+{
+  using convert_typeX = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_typeX, wchar_t> converterX;
+  
+  return converterX.from_bytes(str);
+}
+
+std::string ws2s(const std::wstring& wstr)
+{
+  using convert_typeX = std::codecvt_utf8<wchar_t>;
+  std::wstring_convert<convert_typeX, wchar_t> converterX;
+  
+  return converterX.to_bytes(wstr);
+}
+
+#endif
