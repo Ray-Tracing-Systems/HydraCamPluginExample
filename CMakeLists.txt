@@ -4,10 +4,11 @@ project(hydra_cam_plugin CXX)
 # Установка переменной со списком исходников
 set(SOURCE_LIB 
     CamHostRaysDOF.cpp
+    CamHostRaysTableLens.cpp
     ../HydraAPI/hydra_api/HydraRngUtils.cpp
     ../HydraAPI/hydra_api/pugixml.cpp)		
 
-SET (CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fopenmp")
+SET (CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -msse4.2 -fopenmp")
 
 find_package(OpenMP REQUIRED)
 

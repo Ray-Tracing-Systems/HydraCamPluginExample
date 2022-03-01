@@ -1,13 +1,17 @@
 #include "CamHostPluginAPI.h"
 #include <iostream>
+#include <iomanip> 
 #include <thread> // just for test big delay
 #include <chrono> // std::chrono::seconds
 
 #include <cstdint>
 #include <cstddef>
+#include <cassert>
 #include <memory>
 #include <vector>
+#include <string>
 #include <cstring>
+#include <algorithm>
 
 #include "../HydraCore/hydra_drv/cglobals.h"
 #include "../HydraAPI/hydra_api/HydraAPI.h"
@@ -27,8 +31,8 @@ public:
 
   void ReadParamsFromNode(pugi::xml_node a_camNode);
 
-  void MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirAndFar, size_t in_blockSize) override;
-  void AddSamplesContribution(float* out_color4f, const float* colors4f, size_t in_blockSize, uint32_t a_width, uint32_t a_height) override;
+  void MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirAndFar, size_t in_blockSize, int passId) override;
+  void AddSamplesContribution(float* out_color4f, const float* colors4f, size_t in_blockSize, uint32_t a_width, uint32_t a_height, int passId) override;
 
   unsigned int table[hr_qmc::QRNG_DIMENSIONS][hr_qmc::QRNG_RESOLUTION];
   unsigned int m_globalCounter = 0;
@@ -83,7 +87,7 @@ void SimpleDOF::ReadParamsFromNode(pugi::xml_node a_camNode)
 
 static inline int myPackXY1616(int x, int y) { return (y << 16) | (x & 0x0000FFFF); }
 
-void SimpleDOF::MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirAndFar, size_t in_blockSize)
+void SimpleDOF::MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirAndFar, size_t in_blockSize, int passId)
 {
   #pragma omp parallel for
   for(int i=0;i<in_blockSize;i++)
@@ -133,7 +137,7 @@ void SimpleDOF::MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirA
   m_globalCounter += unsigned(in_blockSize);
 } 
 
-void SimpleDOF::AddSamplesContribution(float* out_color4f, const float* colors4f, size_t in_blockSize, uint32_t a_width, uint32_t a_height)
+void SimpleDOF::AddSamplesContribution(float* out_color4f, const float* colors4f, size_t in_blockSize, uint32_t a_width, uint32_t a_height, int passId)
 {
   float4*       out_color = (float4*)out_color4f;
   const float4* colors    = (const float4*)colors4f;
@@ -155,14 +159,22 @@ void SimpleDOF::AddSamplesContribution(float* out_color4f, const float* colors4f
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+IHostRaysAPI* CreateTableLens();
 
-DLL_EXPORT IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace this function or make your own ... the example will be provided
+IHostRaysAPI* MakeHostRaysEmitter(int a_pluginId) ///<! you replace this function or make your own ... the example will be provided
 {
   if(a_pluginId == 0)
     return nullptr;
 
   std::cout << "[MakeHostRaysEmitter]: create plugin #" << a_pluginId << std::endl;
-  return new SimpleDOF();
+  if(a_pluginId == 2)
+    return CreateTableLens();
+  else
+    return new SimpleDOF();
 }
 
-DLL_EXPORT void DeleteRaysEmitter(IHostRaysAPI* pObject) { delete pObject; }
+void DeleteRaysEmitter(IHostRaysAPI* pObject) { delete pObject; }
