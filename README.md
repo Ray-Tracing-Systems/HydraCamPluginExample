@@ -100,11 +100,15 @@ In fact you can add any nodes and attributes to the 'optical_system' node or to 
 ## Obtain scenes in Hydra format
 
 1. Way number one: use HydraAPI.
+   
    See examples in this repo: https://github.com/Ray-Tracing-Systems/HydraAPI-tests 
+   
    Also see tests description here: http://www.raytracing.ru/tests/hydra_tests_v23b.pdf 
    
 2. Way number two: install our plugin for 3ds max: https://gitlab.com/raytracingsystems 
+   
    Please note that after installing plugin via installer you have to replace everything hydra in C:/[Hydra] folder with your version of hydra because instaler will override it with it's own version.
+   
    Each time you press Render button in 3ds max, new state files will be saved inside "C:/[Hydra]/pluginFiles/scenelib" folder.
    
-   
+   The artist doc is located here http://www.ray-tracing.com/HydraRenderHelp.github.io/index.html 
