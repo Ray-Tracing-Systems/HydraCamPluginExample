@@ -14,6 +14,8 @@
 #include "../HydraCore/hydra_drv/cglobals.h"
 #include "../HydraAPI/hydra_api/HydraAPI.h"
 
+#include "Bitmap.h"
+
 struct PipeThrough
 {
   float cosPower4      = 1.0f;
@@ -27,6 +29,8 @@ public:
   
   void SetParameters(int a_width, int a_height, const float a_projInvMatrix[16], const wchar_t* a_camNodeText) override
   {
+    m_width   = a_width;
+    m_height  = a_height;
     m_fwidth  = float(a_width);
     m_fheight = float(a_height);
     m_aspect  = m_fheight / m_fwidth;
@@ -43,6 +47,7 @@ public:
 
   void MakeRaysBlock(RayPart1* out_rayPosAndNear, RayPart2* out_rayDirAndFar, size_t in_blockSize, int passId) override;
   void AddSamplesContribution(float* out_color4f, const float* colors4f, size_t in_blockSize, uint32_t a_width, uint32_t a_height, int passId) override;
+  void FinishRendering() override;
 
   pugi::xml_document m_doc;
 
@@ -51,6 +56,8 @@ public:
 
   float m_fwidth  = 1024.0f;
   float m_fheight = 1024.0f;
+  int m_width;
+  int m_height;
   float m_aspect  = 1.0f;
   float2 m_physSize;
   float4x4 m_projInv;
@@ -58,7 +65,8 @@ public:
 
   mutable std::vector<float3> m_debugPos;
   bool m_enableDebug = false;
-
+  double m_sppDone = 0.0;
+  float* m_lastFbPointer = nullptr;
   //////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////
   
@@ -468,6 +476,34 @@ void TableLens::AddSamplesContribution(float* out_color4f, const float* colors4f
       out_color[offset].z += color.z*passData.cosPower4;
     }
   }
+  
+  // New after FinishRendering()
+  //
+  const double contribSPP = double(in_blockSize) / (double(m_fwidth)*double(m_fheight));
+  m_sppDone += contribSPP;
+  m_lastFbPointer = out_color4f; // jst remember the pointer for demo purposes
+}
+
+void TableLens::FinishRendering()
+{
+  const float normConst = float(1.0/m_sppDone);
+  const float invGamma  = 1.0f/2.2f;
+
+  std::vector<uint32_t> pixelData(m_width*m_height);
+  const float4* realColor = (const float4*)m_lastFbPointer;
+
+  #pragma omp parallel for
+  for(int i=0;i<m_width*m_height;i++)
+  {
+    float4 color = realColor[i]*normConst;
+    color.x      = std::pow(color.x, invGamma);
+    color.y      = std::pow(color.y, invGamma);
+    color.z      = std::pow(color.z, invGamma);
+    color.w      = 1.0f;
+    pixelData[i] = RealColorToUint32(clamp(color, 0.0f, 1.0f));
+  }
+
+  SaveBMP("z_alex_image.bmp", pixelData.data(), m_width, m_height);
 }
 
 IHostRaysAPI* CreateTableLens() { return new TableLens; }

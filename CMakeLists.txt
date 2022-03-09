@@ -5,6 +5,7 @@ project(hydra_cam_plugin CXX)
 set(SOURCE_LIB 
     CamHostRaysDOF.cpp
     CamHostRaysTableLens.cpp
+    Bitmap.cpp
     ../HydraAPI/hydra_api/HydraRngUtils.cpp
     ../HydraAPI/hydra_api/pugixml.cpp)		
 
