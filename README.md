@@ -27,7 +27,7 @@ hydra -inputlib "tests/demo_05" -statefile "statex_00001.xml" -out "z_out.png" -
 ```bash
 hydra -inputlib "tests/demo_05" -statefile "statex_00001.xml" -cpu_fb 0 
 ```
-Please note that "-cpu_fb" is zero which mean you can not use CPU plugin in this mode, so if you press 'p' you will see black screen.
+Please note that "-cpu_fb" is zero which mean you can not use CPU plugin in this mode (because frame buffer is stored on GPU now which means different algorithm of contribution of samples to image), so if you press 'p' you will see black screen.
 So, to see results of path tracing with pin-hole camera **set 'cpu_plugin' to 0** in camera node inside scene XML.
 
 3. Debug run in a window (press 'p' to run Path Tracing)
@@ -59,6 +59,16 @@ Here is the example of XML node for rendering settings:
   </render_settings>
 ```
 
+There are several essential attributes of camera for your plugin.
+* cpu_plugin = "2" mean some implementation inside your DLL. "0" means plugin is disabled and will not be loaded at all.
+* cpu_plugin_dll = "/home/.../libhydra_cam_plugin.so" is path to your DLL
+* integrator_iters = "16" which mean hydra will trace several paths per single ray. Please use 2,4,8,16, ... to enable possible optimizations in future. 
+
+Next, there are several essentian nodes:
+* (position, look_at, up) which set transform from camera space to world space (this transform is done on GPU)
+* optical_system node which set your optical system data.
+* Pleas note that in current implementation you can also use 'semi_diameter' attribute instead of 'aperture_radius'
+
 Here is the example of XML node for camera settings:
 ```XML
 <camera id="0" name="my camera" type="uvn" integrator_iters="16" cpu_plugin="2"  cpu_plugin_dll="/home/.../libhydra_cam_plugin.so">
@@ -85,9 +95,16 @@ Here is the example of XML node for camera settings:
   </camera>
 ```
 
+In fact you can add any nodes and attributes to the 'optical_system' node or to the 'camera' node itself. Inside plugin you get the full xml as whide char string and then you can read and process any parameters you like. 
+
 ## Obtain scenes in Hydra format
 
-
-
-
-
+1. Way number one: use HydraAPI.
+   See examples in this repo: https://github.com/Ray-Tracing-Systems/HydraAPI-tests 
+   Also see tests description here: http://www.raytracing.ru/tests/hydra_tests_v23b.pdf 
+   
+2. Way number two: install our plugin for 3ds max: https://gitlab.com/raytracingsystems 
+   Please note that after installing plugin via installer you have to replace everything hydra in C:/[Hydra] folder with your version of hydra because instaler will override it with it's own version.
+   Each time you press Render button in 3ds max, new state files will be saved inside "C:/[Hydra]/pluginFiles/scenelib" folder.
+   
+   
